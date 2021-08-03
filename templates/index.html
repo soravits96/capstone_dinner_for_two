@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+  </head>
+  <body>
+    <!-- Background image -->
+    <div class="bg-image" ></div>
+    <!-- Background image -->
+    <h2 id="main-instructions"></h1>
+    <img src="../static/images/logo.svg" class="product-logo"></div>
+    <form id="preferences-menu">
+        <select id="meal-menu" name="meal" class="form-select" aria-label="Default select example" required>
+          <option value="" selected disabled>Which meal?</option>
+          <option value="Breakfast">Breakfast</option>
+          <option value="Brunch">Brunch</option>
+          <option value="Lunch">Lunch</option>
+          <option value="Dinner">Dinner</option>
+        </select>
+        <select id="outdoor-menu" name="outdoor" class="form-select" aria-label="Default select example" required>
+            <option value="" selected disabled>Do you prefer outdoor seating?</option>
+            <option value="Outdoor">Yes</option>
+            <option value="Indoor">No</option>
+        </select>
+        <select id="noise-menu" name="noise" class="form-select" aria-label="Default select example" required>
+            <option value="" selected disabled>What's your preferred noise level?</option>
+            <option value="Quiet">Quiet</option>
+            <option value="Average">Average</option>
+            <option value="Loud">Loud</option>
+            <option value="Very Loud">Very Loud</option>
+        </select>
+        <select id="formal-menu" name="formal" class="form-select" aria-label="Default select example" required>
+          <option value="" selected disabled>How formal?</option>
+          <option value="Casual">Casual</option>
+          <option value="Formal">Formal</option>
+        </select>
+        <button type="submit" class="btn btn-success" id="submit-button">Find me a date spot!</button>
+    </form>
+    <div class="modal" id="swipe-modal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 id="modal-header" class="modal-title">First, we want to learn a little more about you</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div id="restaurant-recommendations"></div>
+              <div id="swipe-restaurant-info">
+                <h1 id="swipe-restaurant-name"></h1>
+                <img id="swipe-restaurant-image">
+                <p id="swipe-restaurant-meals" class="restaurant-info"></p>
+                <p id="swipe-restaurant-indoor-outdoor" class="restaurant-info"></p>
+                <p id="swipe-restaurant-price-range" class="restaurant-info"></p>
+                <p id="swipe-restaurant-tags" class="restaurant-info"></p>
+              </div>
+              <div class="row">
+                <div class="col">
+                  <button type="button" id="dislike-button" class="btn btn-danger" aria-label="Don't Like">Don't Like</button>
+                </div>
+                <div class="col">
+                  <button type="button" id="like-button" class="btn btn-success" aria-label="Like">Like</button>
+                </div>
+                <button type="button" id="next-user-button" class="btn btn-primary">Invite my date to provide their preferences!</button>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <div class="modal" id="name-modal" tabindex="-1">
+      <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="modal-header" class="modal-title">Please enter your name</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="name-form">
+              <div class="mb-3">
+                <input type="text" class="form-control" id="user-name">
+              </div>
+              <button type="submit" class="btn btn-primary" id="submit-name">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+  </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js" integrity="sha384-Atwg2Pkwv9vp0ygtn1JAojH0nYbwNJLPhwyoVbhoPwBhjQPR5VtM2+xf0Uwh9KtT" crossorigin="anonymous"></script>
+    -->
+
+    <script type="text/javascript">
+      const nameModal = new bootstrap.Modal(document.getElementById('name-modal'));
+
+      nameModal.show();
+
+      let photos = {};
+
+      $.getJSON("./static/data/photos.json", function(data){
+        for (info of data) {
+          if (info.label === "interior") {
+            photos[info["business_id"]] = "./static/photos/" + info["photo_id"] + ".jpg";
+          }
+        }
+      }).fail(function(){
+        console.log("An error has occurred.");
+      });
+
+      let swipeRestaurants = [];
+      let currIndex = 0;
+      let rightSwipes = [];
+      let leftSwipes = [];
+      let firstUser = true;
+      let recsForBothUsers = [];
+      let firstUserName = "";
+      let secondUserName = "";
+
+      $(document).on('submit','#preferences-menu', 
+        function(e) {
+          e.preventDefault();
+
+          const meal = $("#meal-menu").val();
+          const outdoor = $("#outdoor-menu").val();
+          const noise = $("#noise-menu").val();
+          const formal = $("#formal-menu").val();
+
+          if (!meal || !outdoor || !noise || !formal) {
+            return;
+          }
+
+          $.ajax({
+              type:'POST',
+              url:'/',
+              data: {
+                  meal: $("#meal-menu").val(),
+                  outdoor: $("#outdoor-menu").val(),
+                  noise: $("#noise-menu").val(),
+                  formal: $("#formal-menu").val()
+              },
+              success: 
+                  function(data) {
+                    swipeRestaurants = data.filter(x => photos[x["business_id"]]).slice(0, 10);
+                    updateRestaurantInfoComponent();
+                    $('#swipe-modal').modal('show');
+                  }
+          });
+      });
+
+      $(document).on('submit', '#name-form', (e) => {
+        e.preventDefault();
+        nameModal.hide();
+        const name = $("#user-name").val();
+        if (!firstUserName) {
+          firstUserName = name;
+        } else {
+          secondUserName = name;
+        }
+        document.getElementById("main-instructions").innerHTML = `${ name }, please indicate your restaurant preferences.`;
+        document.getElementById("modal-header").innerHTML = `${ name }, please indicate your preference for these restaurants.`;
+      });
+
+      document.getElementById("dislike-button").addEventListener("click", () => {
+        leftSwipes.push(swipeRestaurants[currIndex]["business_id"]);
+        updateSwipeState();
+      });
+
+      document.getElementById("like-button").addEventListener("click", () => {
+        rightSwipes.push(swipeRestaurants[currIndex]["business_id"]);
+        updateSwipeState();
+      });
+
+      document.getElementById("next-user-button").addEventListener("click", () => {
+        if (firstUser) {
+          $('#swipe-modal').modal('hide');
+          document.getElementById("dislike-button").style.display = "block";
+          document.getElementById("like-button").style.display = "block";
+          document.getElementById("next-user-button").style.display = "none";
+          document.getElementById('restaurant-recommendations').innerHTML = "";
+
+          nameModal.show();
+
+          $("#user-name").val("");
+          $("#meal-menu").prop('selectedIndex', 0);
+          $("#outdoor-menu").prop('selectedIndex', 0);
+          $("#noise-menu").prop('selectedIndex', 0);
+          $("#formal-menu").prop('selectedIndex', 0);
+
+          currIndex = 0;
+          rightSwipes = [];
+          leftSwipes = [];
+          firstUser = false;
+        } else {
+          document.getElementById("next-user-button").style.display = "none";
+          document.getElementById('restaurant-recommendations').innerHTML = "";
+          document.getElementById('restaurant-recommendations').appendChild(makeUL(recsForBothUsers.slice(0, 10)));
+          document.getElementById("modal-header").innerHTML = `${ secondUserName } and ${ firstUserName }, here are you date recommendations. Enjoy!`
+        }
+      });
+
+      function extractRestaurantInfo(info) {
+        const { 
+          "business_name": businessName,
+          "business_id": businessId,
+          "breakfast_True": breakfast, 
+          "brunch_True": brunch, 
+          "lunch_True": lunch, 
+          "dinner_True": dinner,
+          "OutdoorSeating_True": outdoor,
+          "RestaurantsPriceRange2_1": firstPrice,
+          "RestaurantsPriceRange2_2": secondPrice,
+          "RestaurantsPriceRange2_3": thirdPrice,
+          "RestaurantsPriceRange2_4": fourthPrice
+        } = info
+
+        let meals = "";
+        let dollarSigns = "";
+
+        if (breakfast) {
+          meals = meals + "Breakfast" + ", ";
+        }
+
+        if (brunch) {
+          meals = meals + "Brunch" + ", ";
+        }
+
+        if (lunch) {
+          meals = meals + "Lunch" + ", ";
+        }
+
+        if (dinner) {
+          meals = meals + "Dinner" + ", ";
+        }
+
+        if (meals && meals.charAt(meals.length - 2) === ",") {
+          meals = meals.substr(0, meals.length - 2)
+        }
+
+        if (firstPrice) {
+          dollarSigns = "$";
+        }
+
+        if (secondPrice) {
+          dollarSigns = "$$";
+        }
+
+        if (thirdPrice) {
+          dollarSigns = "$$$";
+        }
+
+        if (fourthPrice) {
+          dollarSigns = "$$$$";
+        }
+
+        let tags = Object.keys(info).filter(key => !key.includes("_") && swipeRestaurants[currIndex][key] === 1 && key !== "Restaurants").map(tag => tag.trim()).join(", "); 
+
+        meals = "Meals Served: " + meals;
+        const outdoorText = outdoor === 1 ? "Has Outdoor Dining: Yes" : "Has Outdoor Dining: No";
+        dollarSigns = "Price: " + dollarSigns;
+        tags = "Tags: " + tags;
+
+        return { businessNameText: businessName, dollarSignText: dollarSigns, mealsText: meals, outdoorText, tagText: tags };
+      }
+
+      function makeUL(array) {
+        // Create the list element:
+        var list = document.createElement('div');
+        list.classList.add("list-group");
+
+        for (var i = 0; i < array.length; i++) {
+          const { businessNameText, dollarSignText, mealsText, outdoorText, tagText } = extractRestaurantInfo(array[i]);
+          const businessId = array[i]['business_id'];
+          
+          const image = document.createElement('img');
+          image.className = "rec-image col";
+          image.src = photos[businessId];
+
+          const business_name = document.createElement('h4')
+          const meals = document.createElement('div');
+          const indoor_outdoor = document.createElement('div');
+          const price_range = document.createElement('div');
+          const tags = document.createElement('div');
+
+          business_name.innerHTML = businessNameText;
+          meals.innerHTML = mealsText;
+          indoor_outdoor.innerHTML = outdoorText;
+          price_range.innerHTML = dollarSignText;
+          tags.innerHTML = tagText;
+
+          const info = document.createElement('div');
+          info.className = "rec-info col";
+
+          info.appendChild(business_name);
+          info.appendChild(meals);
+          info.appendChild(indoor_outdoor);
+          info.appendChild(price_range);
+          info.appendChild(tags);
+
+          const row = document.createElement('div');
+          row.className = "row";
+          row.appendChild(image);
+          row.appendChild(info);
+
+          const item = document.createElement('div');
+          item.className = "list-group-item list-group-item-action";
+
+          item.appendChild(row)
+          list.appendChild(item);
+        }
+
+        return list;
+      }
+
+
+      function updateSwipeState() {
+        if (currIndex < swipeRestaurants.length -  1) {
+          currIndex = currIndex + 1;
+          updateRestaurantInfoComponent()
+        } else {
+          $.ajax({
+              type:'POST',
+              url:'/submit-swipes',
+              data: { 
+                rightSwipes: JSON.stringify(rightSwipes),
+                leftSwipes: JSON.stringify(leftSwipes)
+              },
+              success: 
+                  function(data) {
+                    document.getElementById("dislike-button").style.display = "none";
+                    document.getElementById("like-button").style.display = "none";
+                    document.getElementById("swipe-restaurant-info").style.display = "none";
+
+                    document.getElementById("modal-header").innerHTML = "Based on your preferences, we're recommending the following restaurants. Enjoy!"
+                    document.getElementById("next-user-button").style.display = "block";
+                    document.getElementById('restaurant-recommendations').appendChild(makeUL(data[0].filter(x => photos[x["business_id"]]).filter(x => x["business_name"] !== "Burger King" && x["business_name"] !== "IHOP" && x["business_name"] !== "Waffle House").slice(0, 10)));
+
+                    if (!firstUser) {
+                      document.getElementById("next-user-button").textContent = "See our date recommendations!"
+                    }
+                    
+                    if (data[1]) {
+                      recsForBothUsers = data[1].filter(x => photos[x["business_id"]]).filter(x => x["business_name"] !== "Burger King" && x["business_name"] !== "IHOP" && x["business_name"] !== "Waffle House");
+                    }
+                  }
+          });          
+        }
+      }
+
+      function updateRestaurantInfoComponent() {
+        const { businessNameText, dollarSignText, mealsText, outdoorText, tagText } =  extractRestaurantInfo(swipeRestaurants[currIndex]);
+        const businessId = swipeRestaurants[currIndex]['business_id'];
+
+        document.getElementById("swipe-restaurant-name").innerHTML = businessNameText;
+        document.getElementById("swipe-restaurant-image").src = photos[businessId];
+        document.getElementById("swipe-restaurant-meals").innerHTML =  mealsText;
+        document.getElementById("swipe-restaurant-indoor-outdoor").innerHTML = outdoorText;
+        document.getElementById("swipe-restaurant-price-range").innerHTML =  dollarSignText;
+        document.getElementById("swipe-restaurant-tags").innerHTML = tagText;
+        document.getElementById("swipe-restaurant-info").style.display = "block";
+      }
+    </script>
+  </body>
+</html>
